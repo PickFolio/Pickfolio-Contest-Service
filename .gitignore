@@ -6,6 +6,10 @@ build/
 
 ### IntelliJ IDEA ###
 .idea/modules.xml
+.idea/gradle.xml
+.idea/misc.xml
+.idea/vcs.xml
+.idea/workspace.xml
 .idea/jarRepositories.xml
 .idea/compiler.xml
 .idea/libraries/
@@ -40,3 +44,7 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### Gradle ###
+gradlew
+gradlew.bat
