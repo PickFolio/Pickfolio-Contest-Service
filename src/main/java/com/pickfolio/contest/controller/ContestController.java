@@ -21,10 +21,7 @@ public class ContestController {
     private final ContestService contestService;
 
     @PostMapping("/create")
-    public ResponseEntity<ContestResponse> createContest(
-            @RequestBody CreateContestRequest request,
-            @AuthenticationPrincipal Jwt jwt
-    ) {
+    public ResponseEntity<ContestResponse> createContest(@RequestBody CreateContestRequest request, @AuthenticationPrincipal Jwt jwt) {
         UUID creatorId = UUID.fromString(jwt.getSubject());
         ContestResponse createdContest = contestService.createContest(request, creatorId);
         return new ResponseEntity<>(createdContest, HttpStatus.CREATED);

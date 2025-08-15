@@ -1,8 +1,26 @@
+server:
+  port: 8081
+
 spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/pickfolio_contest
+    username: pickfolio_user
+    password: pickfolio_pass
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
   security:
     oauth2:
       resourceserver:
         jwt:
           # This is the endpoint Auth Service that exposes the public keys.
           # The Auth Service needs to be configured to provide this.
-          jwk-set-uri: "http://auth-service/oauth2/jwks"
+          jwk-set-uri: "http://localhost:8080/oauth2/jwks"
