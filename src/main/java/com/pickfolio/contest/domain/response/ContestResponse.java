@@ -15,5 +15,6 @@ public record ContestResponse(
         LocalDateTime endTime,
         BigDecimal virtualBudget,
         int maxParticipants,
-        UUID creatorId
+        UUID creatorId,
+        LocalDateTime createdAt
 ) {}

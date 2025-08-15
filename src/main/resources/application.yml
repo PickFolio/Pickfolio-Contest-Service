@@ -1,0 +1,8 @@
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # This is the endpoint Auth Service that exposes the public keys.
+          # The Auth Service needs to be configured to provide this.
+          jwk-set-uri: "http://auth-service/oauth2/jwks"
