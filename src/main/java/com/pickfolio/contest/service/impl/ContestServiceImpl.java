@@ -12,6 +12,7 @@ import com.pickfolio.contest.repository.ContestParticipantRepository;
 import com.pickfolio.contest.repository.ContestRepository;
 import com.pickfolio.contest.service.ContestService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ContestServiceImpl implements ContestService {
 
     private final ContestRepository contestRepository;
@@ -34,6 +36,7 @@ public class ContestServiceImpl implements ContestService {
     public ContestResponse createContest(final CreateContestRequest request, final UUID creatorId) {
         validateCreateRequest(request);
 
+        log.info("Creating contest with name: {}, creatorId: {}", request.name(), creatorId);
         Contest contest = Contest.builder()
                 .name(request.name())
                 .status(ContestStatus.OPEN)
@@ -47,49 +50,64 @@ public class ContestServiceImpl implements ContestService {
                 .build();
 
         Contest savedContest = contestRepository.save(contest);
+        log.info("Contest created with ID: {}", savedContest.getId());
 
         return converter.convert(savedContest);
     }
 
     private String generateInviteCode() {
-        // A simple, non-guaranteed unique code for the MVP.
-        return UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+        String code = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+        log.debug("Generated invite code: {}", code);
+        return code;
     }
 
     private void validateCreateRequest(CreateContestRequest request) {
+        log.debug("Validating create contest request: {}", request);
         if (request.name() == null || request.name().isBlank()) {
+            log.warn("Contest name is empty");
             throw new ContestCreationException("Contest name cannot be empty.");
         }
         if (request.startTime() == null || request.endTime() == null) {
+            log.warn("Contest start or end time is not specified");
             throw new ContestCreationException("Contest start and end times must be specified.");
         }
         if (request.startTime().isBefore(LocalDateTime.now())) {
+            log.warn("Contest start time is in the past: {}", request.startTime());
             throw new ContestCreationException("Contest start time must be in the future.");
         }
         if (request.endTime().isBefore(request.startTime())) {
+            log.warn("Contest end time is before start time: start={}, end={}", request.startTime(), request.endTime());
             throw new ContestCreationException("Contest end time must be after the start time.");
         }
         if (request.maxParticipants() < 2) {
+            log.warn("Contest max participants less than 2: {}", request.maxParticipants());
             throw new ContestCreationException("Contest must allow at least 2 participants.");
         }
         if (request.virtualBudget().compareTo(BigDecimal.ZERO) <= 0) {
+            log.warn("Contest virtual budget not greater than zero: {}", request.virtualBudget());
             throw new ContestCreationException("Virtual budget must be greater than zero.");
         }
     }
 
-
     @Override
     public ContestResponse getContestDetails(UUID contestId) {
+        //TODO: Contest details to include participants, scores, etc.
+        log.info("Fetching contest details for ID: {}", contestId);
         Contest contest = contestRepository.findById(contestId)
-                .orElseThrow(() -> new ContestNotFoundException("Contest not found with ID: " + contestId));
+                .orElseThrow(() -> {
+                    log.warn("Contest not found with id: {}", contestId);
+                    return new ContestNotFoundException("Contest not found with ID: " + contestId);
+                });
 
         return converter.convert(contest);
     }
 
     @Override
     public List<ContestResponse> findOpenPublicContests() {
+        log.info("Finding open public contests");
         List<Contest> openContests = contestRepository.findByStatusAndIsPrivateFalse(ContestStatus.OPEN);
 
+        log.debug("Found {} open public contests", openContests.size());
         return openContests.stream()
                 .map(converter::convert)
                 .collect(Collectors.toList());
@@ -98,23 +116,31 @@ public class ContestServiceImpl implements ContestService {
     @Override
     @Transactional
     public void joinContest(JoinContestRequest request, UUID userId) {
+        log.info("User {} joining contest {}", userId, request.contestId());
         Contest contest = contestRepository.findById(request.contestId())
-                .orElseThrow(() -> new ContestNotFoundException("Contest not found with ID: " + request.contestId()));
+                .orElseThrow(() -> {
+                    log.warn("Contest not found: {}", request.contestId());
+                    return new ContestNotFoundException("Contest not found with ID: " + request.contestId());
+                });
 
         if (contest.getStatus() != ContestStatus.OPEN) {
+            log.warn("Contest {} is not open for joining", contest.getId());
             throw new ContestNotOpenException("Contest is not open for joining.");
         }
 
         if (contestParticipantRepository.findByContestIdAndUserId(contest.getId(), userId).isPresent()) {
+            log.warn("User {} already joined contest {}", userId, contest.getId());
             throw new UserAlreadyInContestException("User has already joined this contest.");
         }
 
         if (contestParticipantRepository.countByContestId(contest.getId()) >= contest.getMaxParticipants()) {
+            log.warn("Contest {} is full", contest.getId());
             throw new ContestFullException("Contest is already full.");
         }
 
         if (contest.isPrivate()) {
             if (request.inviteCode() == null || !request.inviteCode().equals(contest.getInviteCode())) {
+                log.warn("Invalid invite code for contest {}: provided={}, expected={}", contest.getId(), request.inviteCode(), contest.getInviteCode());
                 throw new InvalidInviteCodeException("Invalid invite code for this private contest.");
             }
         }
@@ -127,5 +153,6 @@ public class ContestServiceImpl implements ContestService {
                 .build();
 
         contestParticipantRepository.save(participant);
+        log.info("User {} joined contest {}", userId, contest.getId());
     }
 }
