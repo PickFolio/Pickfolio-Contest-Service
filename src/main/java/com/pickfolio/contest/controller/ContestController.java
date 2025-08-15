@@ -1,6 +1,7 @@
 package com.pickfolio.contest.controller;
 
 import com.pickfolio.contest.domain.request.CreateContestRequest;
+import com.pickfolio.contest.domain.request.JoinContestRequest;
 import com.pickfolio.contest.domain.response.ContestResponse;
 import com.pickfolio.contest.service.ContestService;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -25,5 +27,24 @@ public class ContestController {
         UUID creatorId = UUID.fromString(jwt.getSubject());
         ContestResponse createdContest = contestService.createContest(request, creatorId);
         return new ResponseEntity<>(createdContest, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/open-public-contests")
+    public ResponseEntity<List<ContestResponse>> findOpenPublicContests() {
+        List<ContestResponse> contests = contestService.findOpenPublicContests();
+        return ResponseEntity.ok(contests);
+    }
+
+    @GetMapping("/details/{contestId}")
+    public ResponseEntity<ContestResponse> getContestDetails(@PathVariable UUID contestId) {
+        ContestResponse contest = contestService.getContestDetails(contestId);
+        return ResponseEntity.ok(contest);
+    }
+
+    @PostMapping("/join")
+    public ResponseEntity<Void> joinContest(@RequestBody JoinContestRequest request, @AuthenticationPrincipal Jwt jwt) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+        contestService.joinContest(request, userId);
+        return ResponseEntity.ok().build();
     }
 }

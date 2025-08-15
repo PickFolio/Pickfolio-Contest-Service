@@ -12,4 +12,6 @@ public interface ContestParticipantRepository extends JpaRepository<ContestParti
 
     // Check if a user has already joined a specific contest
     Optional<ContestParticipant> findByContestIdAndUserId(UUID contestId, UUID userId);
+
+    Integer countByContestId(UUID contestId);
 }
