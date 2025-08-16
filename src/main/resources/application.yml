@@ -24,3 +24,9 @@ spring:
           # This is the endpoint Auth Service that exposes the public keys.
           # The Auth Service needs to be configured to provide this.
           jwk-set-uri: "http://localhost:8080/oauth2/jwks"
+
+external:
+  api:
+    properties:
+      market-data:
+        base-url: "http://localhost:8082/api/market-data"

@@ -6,6 +6,6 @@ import com.pickfolio.contest.domain.response.Portfolio;
 import java.util.UUID;
 
 public interface PortfolioService {
-    void executeTransaction(UUID contestId, UUID userId, TransactionRequest request);
+    void executeTransaction(TransactionRequest request, UUID contestId, UUID userId);
     Portfolio getPortfolio(UUID contestId, UUID userId);
 }

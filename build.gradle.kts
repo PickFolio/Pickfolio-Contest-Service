@@ -19,6 +19,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security:3.5.3")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server:3.5.3")
 
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
+
     // PostgreSQL driver
     runtimeOnly("org.postgresql:postgresql:42.7.3")
 
