@@ -2,6 +2,7 @@ package com.pickfolio.contest.repository;
 
 import com.pickfolio.contest.domain.model.PortfolioHolding;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -15,4 +16,7 @@ public interface PortfolioHoldingRepository extends JpaRepository<PortfolioHoldi
     Optional<PortfolioHolding> findByParticipantIdAndStockSymbol(UUID participantId, String stockSymbol);
 
     List<PortfolioHolding> findByParticipantId(UUID participantId);
+
+    @Query("SELECT DISTINCT ph.stockSymbol FROM PortfolioHolding ph WHERE ph.participant.contest.status = 'LIVE'")
+    List<String> findDistinctStockSymbolsInLiveContests();
 }

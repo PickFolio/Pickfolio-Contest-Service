@@ -12,4 +12,5 @@ public interface ContestService {
     ContestResponse getContestDetails(UUID contestId);
     List<ContestResponse> findOpenPublicContests();
     void joinContest(JoinContestRequest request, UUID userId);
+    List<String> findActiveSymbols();
 }

@@ -10,6 +10,7 @@ import com.pickfolio.contest.domain.response.ContestResponse;
 import com.pickfolio.contest.exception.*;
 import com.pickfolio.contest.repository.ContestParticipantRepository;
 import com.pickfolio.contest.repository.ContestRepository;
+import com.pickfolio.contest.repository.PortfolioHoldingRepository;
 import com.pickfolio.contest.service.ContestService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,7 @@ public class ContestServiceImpl implements ContestService {
 
     private final ContestRepository contestRepository;
     private final ContestParticipantRepository contestParticipantRepository;
+    private final PortfolioHoldingRepository portfolioHoldingRepository;
     private final ContestResponseConverter converter;
 
     @Override
@@ -154,5 +156,12 @@ public class ContestServiceImpl implements ContestService {
 
         contestParticipantRepository.save(participant);
         log.info("User {} joined contest {}", userId, contest.getId());
+    }
+
+    @Override
+    public List<String> findActiveSymbols() {
+        List<String> symbols = portfolioHoldingRepository.findDistinctStockSymbolsInLiveContests();
+        log.debug("Found {} active symbols in live contests", symbols.size());
+        return symbols;
     }
 }
