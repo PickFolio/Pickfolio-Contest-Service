@@ -5,6 +5,7 @@ import com.pickfolio.contest.client.response.QuoteResponse;
 import com.pickfolio.contest.client.response.ValidationResponse;
 import com.pickfolio.contest.constant.ContestStatus;
 import com.pickfolio.contest.constant.TransactionType;
+import com.pickfolio.contest.converter.PortfolioResponseConverter;
 import com.pickfolio.contest.domain.model.ContestParticipant;
 import com.pickfolio.contest.domain.model.PortfolioHolding;
 import com.pickfolio.contest.domain.model.Transaction;
@@ -19,10 +20,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +37,7 @@ public class PortfolioServiceImpl implements PortfolioService {
     private final PortfolioHoldingRepository holdingRepository;
     private final TransactionRepository transactionRepository;
     private final MarketDataClient marketDataClient;
+    private final PortfolioResponseConverter portfolioResponseConverter;
 
     @Override
     @Transactional
@@ -170,7 +176,27 @@ public class PortfolioServiceImpl implements PortfolioService {
 
     @Override
     public Portfolio getPortfolio(UUID contestId, UUID userId) {
-        log.info("Fetching portfolio for contestId={}, userId={}", contestId, userId);
-        return null;
+        log.debug("Fetching portfolio for contestId={}, userId={}", contestId, userId);
+
+        ContestParticipant participant = participantRepository.findByContestIdAndUserId(contestId, userId)
+                .orElseThrow(() -> {
+                    log.warn("Participant not found for contestId={}, userId={}", contestId, userId);
+                    return new ParticipantNotFoundException("Participant not found in the contest.");
+                });
+
+        List<PortfolioHolding> holdings = holdingRepository.findByParticipantId(participant.getId());
+
+        Map<String, QuoteResponse> quotes = Flux.fromIterable(holdings)
+                .flatMap(holding -> {
+                    log.debug("Fetching quote for symbol={}", holding.getStockSymbol());
+                    return marketDataClient.getQuote(holding.getStockSymbol());
+                })
+                .collect(Collectors.toMap(QuoteResponse::symbol, quote -> quote))
+                .block();
+
+        Portfolio portfolio = portfolioResponseConverter.convert(participant, holdings, quotes);
+        log.info("Fetched Portfolio for participantId={}", participant.getId());
+
+        return portfolio;
     }
 }

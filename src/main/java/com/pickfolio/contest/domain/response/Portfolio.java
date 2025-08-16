@@ -7,6 +7,8 @@ import java.util.UUID;
 public record Portfolio(
         UUID participantId,
         BigDecimal cashBalance,
+        BigDecimal totalHoldingsValue,
         BigDecimal totalPortfolioValue,
-        List<PortfolioHolding> holdings
+        List<PortfolioHolding> holdings,
+        BigDecimal totalProfitLoss
 ) {}

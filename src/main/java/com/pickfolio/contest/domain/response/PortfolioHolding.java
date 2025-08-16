@@ -8,5 +8,7 @@ public record PortfolioHolding(
         String stockSymbol,
         int quantity,
         BigDecimal averageBuyPrice,
-        BigDecimal currentValue // This will be enriched by the Market Data service
+        BigDecimal buyValue,
+        BigDecimal currentValue, // This will be enriched by the Market Data service
+        BigDecimal profit
 ) {}

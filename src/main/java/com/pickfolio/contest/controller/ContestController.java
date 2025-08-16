@@ -4,6 +4,7 @@ import com.pickfolio.contest.domain.request.CreateContestRequest;
 import com.pickfolio.contest.domain.request.JoinContestRequest;
 import com.pickfolio.contest.domain.request.TransactionRequest;
 import com.pickfolio.contest.domain.response.ContestResponse;
+import com.pickfolio.contest.domain.response.Portfolio;
 import com.pickfolio.contest.service.ContestService;
 import com.pickfolio.contest.service.PortfolioService;
 import lombok.RequiredArgsConstructor;
@@ -56,5 +57,12 @@ public class ContestController {
         UUID userId = UUID.fromString(jwt.getSubject());
         portfolioService.executeTransaction(request, contestId, userId);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{contestId}/portfolio")
+    public ResponseEntity<Portfolio> getPortfolio(@PathVariable UUID contestId, @AuthenticationPrincipal Jwt jwt) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+        Portfolio portfolio = portfolioService.getPortfolio(contestId, userId);
+        return ResponseEntity.ok(portfolio);
     }
 }
