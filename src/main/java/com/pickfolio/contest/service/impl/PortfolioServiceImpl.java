@@ -169,6 +169,7 @@ public class PortfolioServiceImpl implements PortfolioService {
                 .quantity(request.quantity())
                 .pricePerShare(price)
                 .build();
+
         transactionRepository.save(transaction);
         log.info("Completed SELL transaction: participantId={}, symbol={}, quantity={}, price={}",
                 participant.getId(), request.stockSymbol(), request.quantity(), price);
