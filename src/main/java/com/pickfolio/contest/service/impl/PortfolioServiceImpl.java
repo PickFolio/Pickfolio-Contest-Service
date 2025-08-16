@@ -10,10 +10,7 @@ import com.pickfolio.contest.domain.model.PortfolioHolding;
 import com.pickfolio.contest.domain.model.Transaction;
 import com.pickfolio.contest.domain.request.TransactionRequest;
 import com.pickfolio.contest.domain.response.Portfolio;
-import com.pickfolio.contest.exception.ContestNotOpenException;
-import com.pickfolio.contest.exception.InsufficientFundsException;
-import com.pickfolio.contest.exception.InvalidStockSymbolException;
-import com.pickfolio.contest.exception.ParticipantNotFoundException;
+import com.pickfolio.contest.exception.*;
 import com.pickfolio.contest.repository.ContestParticipantRepository;
 import com.pickfolio.contest.repository.PortfolioHoldingRepository;
 import com.pickfolio.contest.repository.TransactionRepository;
@@ -39,6 +36,12 @@ public class PortfolioServiceImpl implements PortfolioService {
     @Override
     @Transactional
     public void executeTransaction(TransactionRequest request, UUID contestId, UUID userId) {
+
+        if (request == null || request.transactionType() == null || !(request.transactionType() == TransactionType.BUY || request.transactionType() == TransactionType.SELL) || request.stockSymbol() == null || request.quantity() <= 0) {
+            log.error("Invalid transaction request: {}", request);
+            throw new InvalidTransactionRequestException("Invalid transaction request");
+        }
+
         log.debug("Executing transaction: type={}, symbol={}, quantity={}, contestId={}, userId={}",
                 request.transactionType(), request.stockSymbol(), request.quantity(), contestId, userId);
 
@@ -69,11 +72,11 @@ public class PortfolioServiceImpl implements PortfolioService {
         log.debug("Current price for {}: {}", request.stockSymbol(), currentPrice);
 
         if (request.transactionType() == TransactionType.BUY) {
-            log.info("Processing BUY transaction for userId={}, symbol={}, quantity={} for price per share={}", userId, request.stockSymbol(), request.quantity(), currentPrice);
+            log.debug("Processing BUY transaction for userId={}, symbol={}, quantity={} for price per share={}", userId, request.stockSymbol(), request.quantity(), currentPrice);
             executeBuy(participant, request, currentPrice);
         } else {
-            log.info("SELL transaction not implemented yet for userId={}, symbol={}", userId, request.stockSymbol());
-            // TODO: Implement SELL logic
+            log.debug("Processing SELL transaction for userId={}, symbol={}, quantity={} for price per share={}", userId, request.stockSymbol(), request.quantity(), currentPrice);
+            executeSell(participant, request, currentPrice);
         }
     }
 
@@ -126,6 +129,42 @@ public class PortfolioServiceImpl implements PortfolioService {
 
         transactionRepository.save(transaction);
         log.info("Completed BUY transaction: participantId={}, symbol={}, quantity={}, price={}",
+                participant.getId(), request.stockSymbol(), request.quantity(), price);
+    }
+
+    private void executeSell(ContestParticipant participant, TransactionRequest request, BigDecimal price) {
+        PortfolioHolding holding = holdingRepository
+                .findByParticipantIdAndStockSymbol(participant.getId(), request.stockSymbol())
+                .orElseThrow(() -> {
+                    log.warn("No holding found for participantId={}, symbol={}", participant.getId(), request.stockSymbol());
+                    return new InsufficientHoldingsException("Player does not hold the specified stock symbol.");
+                });
+
+        if (holding.getQuantity() < request.quantity()) {
+            log.warn("Insufficient holdings: participantId={}, symbol={}, requestedQuantity={}, availableQuantity={}",
+                    participant.getId(), request.stockSymbol(), request.quantity(), holding.getQuantity());
+            throw new InsufficientHoldingsException("Insufficient holdings to complete sell transaction.");
+        }
+
+        BigDecimal totalValue = price.multiply(new BigDecimal(request.quantity()));
+        log.debug("Total value for SELL: {}", totalValue);
+
+        int quantityAfterSell = holding.getQuantity() - request.quantity();
+        holding.setQuantity(quantityAfterSell);
+        holdingRepository.save(holding);
+
+        participant.setCashBalance(participant.getCashBalance().add(totalValue));
+        participantRepository.save(participant);
+        log.info("Updated participant cash balance after SELL: participantId={}, newBalance={}", participant.getId(), participant.getCashBalance());
+
+        Transaction transaction = Transaction.builder()
+                .holding(holding)
+                .transactionType(TransactionType.SELL)
+                .quantity(request.quantity())
+                .pricePerShare(price)
+                .build();
+        transactionRepository.save(transaction);
+        log.info("Completed SELL transaction: participantId={}, symbol={}, quantity={}, price={}",
                 participant.getId(), request.stockSymbol(), request.quantity(), price);
     }
 

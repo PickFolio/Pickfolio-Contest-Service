@@ -55,6 +55,16 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler
+    public ResponseEntity<ErrorResponse> handleInsufficientHoldingsException(InsufficientHoldingsException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(ex.getMessage()));
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponse> handleInvalidTransactionRequestException(InvalidTransactionRequestException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(ex.getMessage()));
+    }
+
+    @ExceptionHandler
     public ResponseEntity<ErrorResponse> handleException(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An unexpected error occurred: " + ex.getMessage()));
     }
