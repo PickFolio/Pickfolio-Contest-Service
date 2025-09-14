@@ -122,6 +122,7 @@ public class PortfolioServiceImpl implements PortfolioService {
         holding.setAverageBuyPrice(newAveragePrice);
         holdingRepository.save(holding);
 
+        participant.getHoldings().add(holding);
         participant.setCashBalance(participant.getCashBalance().subtract(totalCost));
         participantRepository.save(participant);
         log.info("Updated participant cash balance: participantId={}, newBalance={}", participant.getId(), participant.getCashBalance());

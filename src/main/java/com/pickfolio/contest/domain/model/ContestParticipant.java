@@ -13,8 +13,8 @@ import java.util.UUID;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-@EqualsAndHashCode
-@ToString
+@EqualsAndHashCode(of = "id")
+@ToString(exclude = "holdings")
 @Entity
 @Table(name = "contest_participants", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"contest_id", "user_id"})

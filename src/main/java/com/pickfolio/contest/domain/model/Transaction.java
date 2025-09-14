@@ -16,7 +16,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @EqualsAndHashCode
-@ToString
+@ToString(exclude = "holding")
 @Entity
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "transactions")

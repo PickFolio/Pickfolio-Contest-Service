@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Getter
@@ -11,8 +13,8 @@ import java.util.UUID;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-@EqualsAndHashCode
-@ToString
+@EqualsAndHashCode(of = "id")
+@ToString(exclude = {"participant", "transactions"})
 @Entity
 @Table(name = "portfolio_holdings", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"participant_id", "stock_symbol"})
@@ -36,4 +38,8 @@ public class PortfolioHolding {
 
     @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal averageBuyPrice;
+
+    @OneToMany(mappedBy = "holding", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
+    private Set<Transaction> transactions = new HashSet<>();
 }
