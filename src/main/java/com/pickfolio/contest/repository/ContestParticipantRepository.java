@@ -2,8 +2,10 @@ package com.pickfolio.contest.repository;
 
 import com.pickfolio.contest.domain.model.ContestParticipant;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,4 +16,7 @@ public interface ContestParticipantRepository extends JpaRepository<ContestParti
     Optional<ContestParticipant> findByContestIdAndUserId(UUID contestId, UUID userId);
 
     Integer countByContestId(UUID contestId);
+
+    @Query("SELECT p FROM ContestParticipant p JOIN FETCH p.holdings WHERE p.contest.status = 'LIVE'")
+    List<ContestParticipant> findAllWithHoldingsInLiveContests();
 }

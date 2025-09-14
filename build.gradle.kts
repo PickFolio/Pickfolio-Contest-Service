@@ -18,6 +18,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation:3.5.3")
     implementation("org.springframework.boot:spring-boot-starter-security:3.5.3")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server:3.5.3")
+    implementation("org.springframework.boot:spring-boot-starter-websocket:3.5.3")
 
     implementation("org.springframework.boot:spring-boot-starter-webflux")
 

@@ -1,20 +1,20 @@
 package com.pickfolio.contest.config;
 
-import org.springframework.beans.factory.annotation.Value;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @Configuration
+@RequiredArgsConstructor
 public class WebClientConfig {
 
-    @Value("${external.api.properties.market-data.base-url}")
-    private String marketDataBaseUrl;
+    private final ExternalApiProperties externalApiProperties;
 
     @Bean
     public WebClient marketDataWebClient() {
         return WebClient.builder()
-                .baseUrl(marketDataBaseUrl)
+                .baseUrl(externalApiProperties.marketData().webClient().baseUrl())
                 .build();
     }
 }

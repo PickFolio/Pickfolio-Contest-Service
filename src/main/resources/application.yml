@@ -29,4 +29,7 @@ external:
   api:
     properties:
       market-data:
-        base-url: "http://localhost:8082/api/market-data"
+        web-client:
+          base-url: "http://localhost:8082/api/market-data"
+        web-socket:
+          base-url: "ws://localhost:8082/ws/market-data"

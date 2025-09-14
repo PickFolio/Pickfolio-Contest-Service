@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Getter
@@ -36,4 +38,8 @@ public class ContestParticipant {
 
     @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal totalPortfolioValue;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "participant", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<PortfolioHolding> holdings = new HashSet<>();
 }
