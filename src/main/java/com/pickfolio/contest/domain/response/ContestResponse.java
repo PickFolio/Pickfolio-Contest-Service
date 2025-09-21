@@ -10,11 +10,12 @@ public record ContestResponse(
         String name,
         ContestStatus status,
         boolean isPrivate,
-        String inviteCode, // Only show to creator
+        String inviteCode,
         LocalDateTime startTime,
         LocalDateTime endTime,
         BigDecimal virtualBudget,
         int maxParticipants,
+        int currentParticipants,
         UUID creatorId,
         LocalDateTime createdAt
 ) {}

@@ -5,12 +5,12 @@ package com.pickfolio.contest.constant;
  */
 public enum ContestStatus {
     /**
-     * Accepting new participants; portfolios are editable.
+     * Accepting new participants; portfolio not editable.
      */
     OPEN,
 
     /**
-     * Contest has started, portfolios are locked for the MVP.
+     * Contest has started, portfolios are editable
      */
     LIVE,
 

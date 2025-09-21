@@ -57,9 +57,9 @@ public class PortfolioServiceImpl implements PortfolioService {
                     return new ParticipantNotFoundException("Participant not found");
                 });
 
-        if(participant.getContest().getStatus() == ContestStatus.COMPLETED || participant.getContest().getStatus() == ContestStatus.CANCELLED) {
+        if(!participant.getContest().getStatus().equals(ContestStatus.LIVE)) {
             log.warn("Contest is not open for transactions: contestId={}, status={}", contestId, participant.getContest().getStatus());
-            throw new ContestNotOpenException("Contest is not open for transactions");
+            throw new ContestNotOpenException("Contest is not live for transactions");
         }
 
         ValidationResponse validation = marketDataClient.validateSymbol(request.stockSymbol()).block();
