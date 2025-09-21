@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 @Service
@@ -32,7 +33,7 @@ public class ContestLifecycleService {
     private void startPendingContests() {
         List<Contest> contestsToStart = contestRepository.findAllByStatusAndStartTimeBefore(
                 ContestStatus.OPEN,
-                LocalDateTime.now()
+                LocalDateTime.now(ZoneOffset.UTC)
         );
 
         for (Contest contest : contestsToStart) {
@@ -45,7 +46,7 @@ public class ContestLifecycleService {
     private void endLiveContests() {
         List<Contest> contestsToEnd = contestRepository.findAllByStatusAndEndTimeBefore(
                 ContestStatus.LIVE,
-                LocalDateTime.now()
+                LocalDateTime.now(ZoneOffset.UTC)
         );
 
         for (Contest contest : contestsToEnd) {

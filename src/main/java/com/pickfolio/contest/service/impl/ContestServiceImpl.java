@@ -18,7 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -73,7 +74,7 @@ public class ContestServiceImpl implements ContestService {
             log.warn("Contest start or end time is not specified");
             throw new ContestCreationException("Contest start and end times must be specified.");
         }
-        if (request.startTime().isBefore(LocalDateTime.now())) {
+        if (request.startTime().toInstant(ZoneOffset.UTC).isBefore(Instant.now())) {
             log.warn("Contest start time is in the past: {}", request.startTime());
             throw new ContestCreationException("Contest start time must be in the future.");
         }
