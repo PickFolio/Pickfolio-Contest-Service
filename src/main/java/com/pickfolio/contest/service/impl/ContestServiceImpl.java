@@ -20,9 +20,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -54,6 +56,17 @@ public class ContestServiceImpl implements ContestService {
 
         Contest savedContest = contestRepository.save(contest);
         log.info("Contest created with ID: {}", savedContest.getId());
+
+        // Automatically join the creator to the contest they just created.
+        ContestParticipant creatorAsParticipant = ContestParticipant.builder()
+                .contest(savedContest)
+                .userId(creatorId)
+                .cashBalance(savedContest.getVirtualBudget())
+                .totalPortfolioValue(savedContest.getVirtualBudget())
+                .build();
+
+        contestParticipantRepository.save(creatorAsParticipant);
+        log.info("Creator {} automatically joined contest {}", creatorId, savedContest.getId());
 
         return converter.convert(savedContest);
     }
@@ -164,5 +177,60 @@ public class ContestServiceImpl implements ContestService {
         List<String> symbols = portfolioHoldingRepository.findDistinctStockSymbolsInLiveContests();
         log.debug("Found {} active symbols in live contests", symbols.size());
         return symbols;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ContestResponse> findMyContests(UUID userId) {
+        log.info("Finding all contests for user {}", userId);
+
+        List<Contest> createdContests = contestRepository.findAllByCreatorId(userId);
+
+        List<ContestParticipant> participants = contestParticipantRepository.findAllByUserId(userId);
+        List<Contest> joinedContests = participants.stream()
+                .map(ContestParticipant::getContest)
+                .toList();
+
+        return Stream.concat(createdContests.stream(), joinedContests.stream())
+                .distinct()
+                .sorted(Comparator.comparing(Contest::getCreatedAt).reversed())
+                .map(converter::convert)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void joinContestByInviteCode(JoinContestRequest request, UUID userId) {
+        log.info("User {} joining contest with invite code: {}", userId, request.inviteCode());
+        Contest contest = contestRepository.findByInviteCode(request.inviteCode())
+                .orElseThrow(() -> {
+                    log.warn("No contest found with invite code: {}", request.inviteCode());
+                    return new ContestNotFoundException("Contest not found with ID: " + request.contestId());
+                });
+
+        if (contest.getStatus() != ContestStatus.OPEN) {
+            log.warn("Private contest {} is not open for joining", contest.getId());
+            throw new ContestNotOpenException("Contest is not open for joining.");
+        }
+
+        if (contestParticipantRepository.findByContestIdAndUserId(contest.getId(), userId).isPresent()) {
+            log.warn("User {} already joined the private contest {}", userId, contest.getId());
+            throw new UserAlreadyInContestException("User has already joined this contest.");
+        }
+
+        if (contestParticipantRepository.countByContestId(contest.getId()) >= contest.getMaxParticipants()) {
+            log.warn("Private contest {} is full", contest.getId());
+            throw new ContestFullException("Contest is already full.");
+        }
+
+        ContestParticipant participant = ContestParticipant.builder()
+                .contest(contest)
+                .userId(userId)
+                .cashBalance(contest.getVirtualBudget())
+                .totalPortfolioValue(contest.getVirtualBudget())
+                .build();
+
+        contestParticipantRepository.save(participant);
+        log.info("User {} joined private contest {}", userId, contest.getId());
     }
 }

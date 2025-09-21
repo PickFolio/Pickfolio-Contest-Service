@@ -65,4 +65,18 @@ public class ContestController {
         Portfolio portfolio = portfolioService.getPortfolio(contestId, userId);
         return ResponseEntity.ok(portfolio);
     }
+
+    @GetMapping("/my-contests")
+    public ResponseEntity<List<ContestResponse>> findMyContests(@AuthenticationPrincipal Jwt jwt) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+        List<ContestResponse> contests = contestService.findMyContests(userId);
+        return ResponseEntity.ok(contests);
+    }
+
+    @PostMapping("/join-by-code")
+    public ResponseEntity<Void> joinByCode(@RequestBody JoinContestRequest request, @AuthenticationPrincipal Jwt jwt) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+        contestService.joinContestByInviteCode(request, userId);
+        return ResponseEntity.ok().build();
+    }
 }

@@ -19,4 +19,6 @@ public interface ContestParticipantRepository extends JpaRepository<ContestParti
 
     @Query("SELECT p FROM ContestParticipant p JOIN FETCH p.holdings WHERE p.contest.status = 'LIVE'")
     List<ContestParticipant> findAllWithHoldingsInLiveContests();
+
+    List<ContestParticipant> findAllByUserId(UUID userId);
 }

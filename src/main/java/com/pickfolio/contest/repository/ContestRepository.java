@@ -22,4 +22,6 @@ public interface ContestRepository extends JpaRepository<Contest, UUID> {
     List<Contest> findAllByStatusAndStartTimeBefore(ContestStatus status, LocalDateTime startTime);
 
     List<Contest> findAllByStatusAndEndTimeBefore(ContestStatus status, LocalDateTime startTime);
+
+    List<Contest> findAllByCreatorId(UUID creatorId);
 }
