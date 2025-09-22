@@ -1,5 +1,7 @@
 package com.pickfolio.contest.service.impl;
 
+import com.pickfolio.contest.client.AuthServiceClient;
+import com.pickfolio.contest.client.response.UserDetailResponse;
 import com.pickfolio.contest.converter.ContestResponseConverter;
 import com.pickfolio.contest.constant.ContestStatus;
 import com.pickfolio.contest.domain.model.Contest;
@@ -7,6 +9,7 @@ import com.pickfolio.contest.domain.model.ContestParticipant;
 import com.pickfolio.contest.domain.request.CreateContestRequest;
 import com.pickfolio.contest.domain.request.JoinContestRequest;
 import com.pickfolio.contest.domain.response.ContestResponse;
+import com.pickfolio.contest.domain.response.LeaderboardEntryResponse;
 import com.pickfolio.contest.exception.*;
 import com.pickfolio.contest.repository.ContestParticipantRepository;
 import com.pickfolio.contest.repository.ContestRepository;
@@ -20,9 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.Comparator;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -35,6 +37,7 @@ public class ContestServiceImpl implements ContestService {
     private final ContestParticipantRepository contestParticipantRepository;
     private final PortfolioHoldingRepository portfolioHoldingRepository;
     private final ContestResponseConverter converter;
+    private final AuthServiceClient authServiceClient;
 
     @Override
     @Transactional
@@ -232,5 +235,34 @@ public class ContestServiceImpl implements ContestService {
 
         contestParticipantRepository.save(participant);
         log.info("User {} joined private contest {}", userId, contest.getId());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LeaderboardEntryResponse> getLeaderboard(UUID contestId) {
+        log.debug("Fetching leaderboard for contestId={}", contestId);
+        List<ContestParticipant> participants = contestParticipantRepository.findAllByContestIdOrderByTotalPortfolioValueDesc(contestId);
+
+        List<UUID> userIds = participants.stream()
+                .map(ContestParticipant::getUserId)
+                .distinct()
+                .toList();
+
+        if (userIds.isEmpty()) {
+            return List.of();
+        }
+
+        Map<UUID, UserDetailResponse> userDetailsMap = Optional.ofNullable(authServiceClient.getUsersDetails(userIds).block())
+                .orElse(List.of())
+                .stream()
+                .collect(Collectors.toMap(UserDetailResponse::id, Function.identity()));
+
+        return participants.stream()
+                .map(p -> {
+                    String username = userDetailsMap.getOrDefault(p.getUserId(), new UserDetailResponse(p.getUserId(), "Unknown")).username();
+                    return new LeaderboardEntryResponse(p.getId(), p.getUserId(), username, p.getTotalPortfolioValue());
+                })
+                .collect(Collectors.toList());
+
     }
 }

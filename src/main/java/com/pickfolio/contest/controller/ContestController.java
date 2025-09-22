@@ -83,7 +83,7 @@ public class ContestController {
 
     @GetMapping("/{contestId}/leaderboard")
     public ResponseEntity<List<LeaderboardEntryResponse>> getLeaderboard(@PathVariable UUID contestId) {
-        List<LeaderboardEntryResponse> leaderboard = portfolioService.getLeaderboard(contestId);
+        List<LeaderboardEntryResponse> leaderboard = contestService.getLeaderboard(contestId);
         return ResponseEntity.ok(leaderboard);
     }
 }

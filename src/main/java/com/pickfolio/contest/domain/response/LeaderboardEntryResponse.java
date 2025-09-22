@@ -6,5 +6,6 @@ import java.util.UUID;
 public record LeaderboardEntryResponse(
         UUID participantId,
         UUID userId,
+        String username,
         BigDecimal totalPortfolioValue
 ) {}

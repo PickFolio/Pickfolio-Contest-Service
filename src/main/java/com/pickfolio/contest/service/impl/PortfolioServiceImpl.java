@@ -10,7 +10,6 @@ import com.pickfolio.contest.domain.model.ContestParticipant;
 import com.pickfolio.contest.domain.model.PortfolioHolding;
 import com.pickfolio.contest.domain.model.Transaction;
 import com.pickfolio.contest.domain.request.TransactionRequest;
-import com.pickfolio.contest.domain.response.LeaderboardEntryResponse;
 import com.pickfolio.contest.domain.response.Portfolio;
 import com.pickfolio.contest.exception.*;
 import com.pickfolio.contest.repository.ContestParticipantRepository;
@@ -201,16 +200,5 @@ public class PortfolioServiceImpl implements PortfolioService {
         log.info("Fetched Portfolio for participantId={}", participant.getId());
 
         return portfolio;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<LeaderboardEntryResponse> getLeaderboard(UUID contestId) {
-        log.debug("Fetching leaderboard for contestId={}", contestId);
-        List<ContestParticipant> participants = participantRepository.findAllByContestIdOrderByTotalPortfolioValueDesc(contestId);
-
-        return participants.stream()
-                .map(p -> new LeaderboardEntryResponse(p.getId(), p.getUserId(), p.getTotalPortfolioValue()))
-                .collect(Collectors.toList());
     }
 }

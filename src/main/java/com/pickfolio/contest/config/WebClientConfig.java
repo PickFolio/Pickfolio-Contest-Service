@@ -17,4 +17,11 @@ public class WebClientConfig {
                 .baseUrl(externalApiProperties.marketData().webClient().baseUrl())
                 .build();
     }
+
+    @Bean
+    public WebClient authServiceWebClient() {
+        return WebClient.builder()
+                .baseUrl(externalApiProperties.authService().webClient().baseUrl())
+                .build();
+    }
 }
