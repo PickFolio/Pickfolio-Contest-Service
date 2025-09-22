@@ -21,4 +21,6 @@ public interface ContestParticipantRepository extends JpaRepository<ContestParti
     List<ContestParticipant> findAllWithHoldingsInLiveContests();
 
     List<ContestParticipant> findAllByUserId(UUID userId);
+
+    List<ContestParticipant> findAllByContestIdOrderByTotalPortfolioValueDesc(UUID contestId);
 }

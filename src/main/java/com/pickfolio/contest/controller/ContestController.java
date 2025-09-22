@@ -4,6 +4,7 @@ import com.pickfolio.contest.domain.request.CreateContestRequest;
 import com.pickfolio.contest.domain.request.JoinContestRequest;
 import com.pickfolio.contest.domain.request.TransactionRequest;
 import com.pickfolio.contest.domain.response.ContestResponse;
+import com.pickfolio.contest.domain.response.LeaderboardEntryResponse;
 import com.pickfolio.contest.domain.response.Portfolio;
 import com.pickfolio.contest.service.ContestService;
 import com.pickfolio.contest.service.PortfolioService;
@@ -78,5 +79,11 @@ public class ContestController {
         UUID userId = UUID.fromString(jwt.getSubject());
         contestService.joinContestByInviteCode(request, userId);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{contestId}/leaderboard")
+    public ResponseEntity<List<LeaderboardEntryResponse>> getLeaderboard(@PathVariable UUID contestId) {
+        List<LeaderboardEntryResponse> leaderboard = portfolioService.getLeaderboard(contestId);
+        return ResponseEntity.ok(leaderboard);
     }
 }
