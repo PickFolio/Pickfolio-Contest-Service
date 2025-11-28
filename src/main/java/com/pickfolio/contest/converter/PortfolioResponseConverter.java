@@ -22,12 +22,14 @@ public class PortfolioResponseConverter {
             BigDecimal currentPrice = quotes.get(holding.getStockSymbol()).price();
             BigDecimal currentValue = currentPrice.multiply(new BigDecimal(holding.getQuantity()));
             BigDecimal buyValue = holding.getAverageBuyPrice().multiply(new BigDecimal(holding.getQuantity()));
+
             return new com.pickfolio.contest.domain.response.PortfolioHolding(
                     holding.getId(),
                     holding.getStockSymbol(),
                     holding.getQuantity(),
                     holding.getAverageBuyPrice(),
                     buyValue,
+                    currentPrice,
                     currentValue,
                     currentValue.subtract(buyValue)
             );

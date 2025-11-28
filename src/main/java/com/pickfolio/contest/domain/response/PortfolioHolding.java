@@ -9,6 +9,7 @@ public record PortfolioHolding(
         int quantity,
         BigDecimal averageBuyPrice,
         BigDecimal buyValue,
+        BigDecimal currentPrice,
         BigDecimal currentValue, // This will be enriched by the Market Data service
         BigDecimal profit
 ) {}

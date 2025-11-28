@@ -208,7 +208,7 @@ public class ContestServiceImpl implements ContestService {
         Contest contest = contestRepository.findByInviteCode(request.inviteCode())
                 .orElseThrow(() -> {
                     log.warn("No contest found with invite code: {}", request.inviteCode());
-                    return new ContestNotFoundException("Contest not found with ID: " + request.contestId());
+                    return new ContestNotFoundException("Contest not found with invite code: " + request.inviteCode());
                 });
 
         if (contest.getStatus() != ContestStatus.OPEN) {

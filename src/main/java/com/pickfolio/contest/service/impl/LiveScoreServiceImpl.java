@@ -35,6 +35,11 @@ public class LiveScoreServiceImpl implements LiveScoreService {
             }
             logger.info("Received price updates for {} stocks", prices.size());
 
+            // 1. Broadcast the raw prices to the frontend so clients can update their own portfolios instantly
+            // The frontend will subscribe to "/topic/live-prices"
+            messagingTemplate.convertAndSend("/topic/live-prices", prices);
+
+            // 2. Recalculate Leaderboards (Server-side authority)
             List<ContestParticipant> activeParticipants = participantRepository.findAllWithHoldingsInLiveContests();
 
             for (ContestParticipant participant : activeParticipants) {
@@ -46,15 +51,18 @@ public class LiveScoreServiceImpl implements LiveScoreService {
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
                 BigDecimal newTotalValue = participant.getCashBalance().add(holdingsValue);
-                participant.setTotalPortfolioValue(newTotalValue);
-                participantRepository.save(participant);
 
-                // The frontend will subscribe to "/topic/contest/{contestId}"
-                String topic = "/topic/contest/" + participant.getContest().getId();
-                messagingTemplate.convertAndSend(topic, Map.of(
-                        "participantId", participant.getId(),
-                        "totalPortfolioValue", newTotalValue
-                ));
+                // Only save/broadcast if value changed noticeably (optimization to save DB writes)
+                if (participant.getTotalPortfolioValue().compareTo(newTotalValue) != 0) {
+                    participant.setTotalPortfolioValue(newTotalValue);
+                    participantRepository.save(participant);
+
+                    String topic = "/topic/contest/" + participant.getContest().getId();
+                    messagingTemplate.convertAndSend(topic, Map.of(
+                            "participantId", participant.getId(),
+                            "totalPortfolioValue", newTotalValue
+                    ));
+                }
             }
         } catch (Exception e) {
             logger.error("Failed to process price update", e);
