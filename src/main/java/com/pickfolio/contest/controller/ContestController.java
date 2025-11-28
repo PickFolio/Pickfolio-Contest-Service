@@ -1,5 +1,6 @@
 package com.pickfolio.contest.controller;
 
+import com.pickfolio.contest.client.response.QuoteResponse;
 import com.pickfolio.contest.domain.request.CreateContestRequest;
 import com.pickfolio.contest.domain.request.JoinContestRequest;
 import com.pickfolio.contest.domain.request.TransactionRequest;
@@ -85,5 +86,10 @@ public class ContestController {
     public ResponseEntity<List<LeaderboardEntryResponse>> getLeaderboard(@PathVariable UUID contestId) {
         List<LeaderboardEntryResponse> leaderboard = contestService.getLeaderboard(contestId);
         return ResponseEntity.ok(leaderboard);
+    }
+
+    @GetMapping("/quote/{symbol}")
+    public ResponseEntity<QuoteResponse> getQuote(@PathVariable String symbol) {
+        return ResponseEntity.ok(contestService.getQuote(symbol));
     }
 }

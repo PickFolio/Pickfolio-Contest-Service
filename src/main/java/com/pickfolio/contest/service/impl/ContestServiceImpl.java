@@ -1,6 +1,8 @@
 package com.pickfolio.contest.service.impl;
 
 import com.pickfolio.contest.client.AuthServiceClient;
+import com.pickfolio.contest.client.MarketDataClient;
+import com.pickfolio.contest.client.response.QuoteResponse;
 import com.pickfolio.contest.client.response.UserDetailResponse;
 import com.pickfolio.contest.converter.ContestResponseConverter;
 import com.pickfolio.contest.constant.ContestStatus;
@@ -38,6 +40,7 @@ public class ContestServiceImpl implements ContestService {
     private final PortfolioHoldingRepository portfolioHoldingRepository;
     private final ContestResponseConverter converter;
     private final AuthServiceClient authServiceClient;
+    private final MarketDataClient marketDataClient;
 
     @Override
     @Transactional
@@ -264,5 +267,13 @@ public class ContestServiceImpl implements ContestService {
                 })
                 .collect(Collectors.toList());
 
+    }
+
+    @Override
+    @Transactional(readOnly = true) // Read-only is fine here
+    public QuoteResponse getQuote(String symbol) {
+        log.debug("Fetching quote for symbol: {}", symbol);
+        // We block here because the Controller expects a synchronous response
+        return marketDataClient.getQuote(symbol).block();
     }
 }
