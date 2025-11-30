@@ -1,6 +1,7 @@
 package com.pickfolio.contest.service;
 
 import com.pickfolio.contest.client.response.QuoteResponse;
+import com.pickfolio.contest.client.response.SearchResult;
 import com.pickfolio.contest.domain.request.CreateContestRequest;
 import com.pickfolio.contest.domain.request.JoinContestRequest;
 import com.pickfolio.contest.domain.response.ContestResponse;
@@ -19,4 +20,5 @@ public interface ContestService {
     List<ContestResponse> findMyContests(UUID userId);
     List<LeaderboardEntryResponse> getLeaderboard(UUID contestId);
     QuoteResponse getQuote(String symbol);
+    List<SearchResult> searchStocks(String query);
 }

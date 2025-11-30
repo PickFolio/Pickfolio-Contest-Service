@@ -3,6 +3,7 @@ package com.pickfolio.contest.service.impl;
 import com.pickfolio.contest.client.AuthServiceClient;
 import com.pickfolio.contest.client.MarketDataClient;
 import com.pickfolio.contest.client.response.QuoteResponse;
+import com.pickfolio.contest.client.response.SearchResult;
 import com.pickfolio.contest.client.response.UserDetailResponse;
 import com.pickfolio.contest.converter.ContestResponseConverter;
 import com.pickfolio.contest.constant.ContestStatus;
@@ -275,5 +276,14 @@ public class ContestServiceImpl implements ContestService {
         log.debug("Fetching quote for symbol: {}", symbol);
         // We block here because the Controller expects a synchronous response
         return marketDataClient.getQuote(symbol).block();
+    }
+
+    @Override
+    public List<SearchResult> searchStocks(String query) {
+        // Return empty list for short queries to save API calls
+        if (query == null || query.length() < 2) {
+            return List.of();
+        }
+        return marketDataClient.searchSymbols(query).collectList().block();
     }
 }
