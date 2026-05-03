@@ -21,6 +21,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+import com.pickfolio.contest.domain.response.SuggestedFormatResponse;
+import java.math.BigDecimal;
+
 @RestController
 @RequestMapping("/api/contests")
 @RequiredArgsConstructor
@@ -28,6 +31,20 @@ public class ContestController {
 
     private final ContestService contestService;
     private final PortfolioService portfolioService;
+
+    @GetMapping("/suggested-format")
+    public ResponseEntity<SuggestedFormatResponse> getSuggestedFormat() {
+        SuggestedFormatResponse format = new SuggestedFormatResponse(
+                "opening-range-15m",
+                "15-minute opening range battle",
+                "A compact contest format for fast decisions after market open. Great for testing volatility.",
+                "Morning Dash",
+                new BigDecimal("100000.00"), // 1 Lac
+                15,
+                10
+        );
+        return ResponseEntity.ok(format);
+    }
 
     @PostMapping("/create")
     public ResponseEntity<ContestResponse> createContest(@RequestBody CreateContestRequest request, @AuthenticationPrincipal Jwt jwt) {
