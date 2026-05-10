@@ -31,6 +31,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/internal/**").permitAll()
+                        .requestMatchers("/api/contests/suggested-format").permitAll()
                         .requestMatchers("/ws-contests/**").permitAll()
                         .anyRequest().authenticated()
                 )
