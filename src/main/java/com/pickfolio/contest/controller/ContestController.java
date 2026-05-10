@@ -23,6 +23,8 @@ import java.util.UUID;
 
 import com.pickfolio.contest.domain.response.SuggestedFormatResponse;
 import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.Random;
 
 @RestController
 @RequestMapping("/api/contests")
@@ -31,19 +33,50 @@ public class ContestController {
 
     private final ContestService contestService;
     private final PortfolioService portfolioService;
+    private final Random random = new Random();
+
+    private final List<SuggestedFormatResponse> suggestedFormats = Arrays.asList(
+            new SuggestedFormatResponse(
+                    "opening-range-15m",
+                    "15-minute opening range battle",
+                    "A compact contest format for fast decisions after market open. Great for testing volatility.",
+                    "Morning Dash",
+                    new BigDecimal("100000.00"), // 1 Lac
+                    15,
+                    10
+            ),
+            new SuggestedFormatResponse(
+                    "power-hour-60m",
+                    "Power Hour Showdown",
+                    "A one-hour intense contest designed for the final hour of trading. High volume, high stakes.",
+                    "Power Hour",
+                    new BigDecimal("500000.00"), // 5 Lac
+                    60,
+                    20
+            ),
+            new SuggestedFormatResponse(
+                    "penny-stock-derby",
+                    "Micro-cap Derby",
+                    "Test your skills with highly volatile small-cap stocks. Limited budget, maximum participants.",
+                    "Penny Dash",
+                    new BigDecimal("25000.00"), // 25k
+                    120, // 2 hours
+                    50
+            ),
+            new SuggestedFormatResponse(
+                    "blue-chip-endurance",
+                    "Blue Chip Endurance",
+                    "A full-day contest focusing on stable, large-cap companies. Prove your fundamental analysis skills.",
+                    "Titan's Run",
+                    new BigDecimal("1000000.00"), // 10 Lac
+                    375, // full market day ~6 hours 15 mins
+                    5
+            )
+    );
 
     @GetMapping("/suggested-format")
-    public ResponseEntity<SuggestedFormatResponse> getSuggestedFormat() {
-        SuggestedFormatResponse format = new SuggestedFormatResponse(
-                "opening-range-15m",
-                "15-minute opening range battle",
-                "A compact contest format for fast decisions after market open. Great for testing volatility.",
-                "Morning Dash",
-                new BigDecimal("100000.00"), // 1 Lac
-                15,
-                10
-        );
-        return ResponseEntity.ok(format);
+    public ResponseEntity<List<SuggestedFormatResponse>> getSuggestedFormat() {
+        return ResponseEntity.ok(suggestedFormats);
     }
 
     @PostMapping("/create")
