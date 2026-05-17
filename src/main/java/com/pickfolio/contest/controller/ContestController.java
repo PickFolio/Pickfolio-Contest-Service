@@ -18,6 +18,8 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 
+import com.pickfolio.contest.domain.response.SmartAlertResponse;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -147,5 +149,12 @@ public class ContestController {
     @GetMapping("/search")
     public ResponseEntity<List<SearchResult>> searchStocks(@RequestParam String q) {
         return ResponseEntity.ok(contestService.searchStocks(q));
+    }
+
+    @GetMapping("/my-alerts")
+    public ResponseEntity<List<SmartAlertResponse>> getSmartAlerts(@AuthenticationPrincipal Jwt jwt) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+        List<SmartAlertResponse> alerts = portfolioService.getSmartAlerts(userId);
+        return ResponseEntity.ok(alerts);
     }
 }

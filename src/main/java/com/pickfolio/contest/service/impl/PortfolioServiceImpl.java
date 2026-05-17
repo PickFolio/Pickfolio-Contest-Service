@@ -29,6 +29,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.pickfolio.contest.domain.response.SmartAlertResponse;
+import java.util.ArrayList;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -38,6 +41,90 @@ public class PortfolioServiceImpl implements PortfolioService {
     private final TransactionRepository transactionRepository;
     private final MarketDataClient marketDataClient;
     private final PortfolioResponseConverter portfolioResponseConverter;
+
+    @Override
+    public List<SmartAlertResponse> getSmartAlerts(UUID userId) {
+        log.debug("Fetching smart alerts for userId={}", userId);
+        List<SmartAlertResponse> alerts = new ArrayList<>();
+        
+        List<ContestParticipant> liveParticipants = participantRepository.findAllByUserIdAndContestStatus(userId, ContestStatus.LIVE);
+        if (liveParticipants.isEmpty()) {
+            return alerts;
+        }
+
+        // Check for Idle Cash and gather all unique stock symbols to fetch prices in one go
+        List<PortfolioHolding> allHoldings = new ArrayList<>();
+        for (ContestParticipant p : liveParticipants) {
+            BigDecimal totalValue = p.getTotalPortfolioValue();
+            BigDecimal cashBalance = p.getCashBalance();
+            
+            if (cashBalance.compareTo(BigDecimal.ZERO) > 0 && totalValue.compareTo(BigDecimal.ZERO) > 0) {
+                BigDecimal cashRatio = cashBalance.divide(totalValue, 4, RoundingMode.HALF_UP);
+                if (cashRatio.compareTo(new BigDecimal("0.4")) > 0) {
+                    alerts.add(new SmartAlertResponse(
+                            "cash-" + p.getContest().getId(),
+                            "warning",
+                            "Idle cash detected",
+                            "You have uninvested cash. Consider making a trade.",
+                            p.getContest().getId(),
+                            "IDLE_CASH"
+                    ));
+                }
+            }
+            List<PortfolioHolding> holdings = holdingRepository.findByParticipantId(p.getId());
+            allHoldings.addAll(holdings);
+        }
+
+        if (allHoldings.isEmpty()) {
+            return alerts;
+        }
+
+        Map<String, QuoteResponse> quotes = Flux.fromIterable(allHoldings)
+                .map(PortfolioHolding::getStockSymbol)
+                .distinct()
+                .flatMap(symbol -> marketDataClient.getQuote(symbol))
+                .collect(Collectors.toMap(QuoteResponse::symbol, quote -> quote))
+                .block();
+
+        if (quotes == null) {
+            return alerts;
+        }
+
+        for (ContestParticipant p : liveParticipants) {
+            List<PortfolioHolding> holdings = allHoldings.stream()
+                    .filter(h -> h.getParticipant().getId().equals(p.getId()))
+                    .toList();
+
+            for (PortfolioHolding h : holdings) {
+                QuoteResponse quote = quotes.get(h.getStockSymbol());
+                if (quote != null && quote.price() != null) {
+                    BigDecimal pctChange = quote.changePercent() != null ? quote.changePercent() : BigDecimal.ZERO;
+
+                    if (pctChange.compareTo(new BigDecimal("-5")) <= 0) {
+                        alerts.add(new SmartAlertResponse(
+                                "drop-" + h.getId(),
+                                "error",
+                                "Position dropped",
+                                h.getStockSymbol().replace(".NS", "") + " dropped " + pctChange.abs().setScale(1, RoundingMode.HALF_UP) + "%.",
+                                p.getContest().getId(),
+                                "PRICE_DROP"
+                        ));
+                    } else if (pctChange.compareTo(new BigDecimal("5")) >= 0) {
+                        alerts.add(new SmartAlertResponse(
+                                "jump-" + h.getId(),
+                                "success",
+                                "Position jumped",
+                                h.getStockSymbol().replace(".NS", "") + " jumped " + pctChange.setScale(1, RoundingMode.HALF_UP) + "%.",
+                                p.getContest().getId(),
+                                "PRICE_JUMP"
+                        ));
+                    }
+                }
+            }
+        }
+
+        return alerts;
+    }
 
     @Override
     @Transactional

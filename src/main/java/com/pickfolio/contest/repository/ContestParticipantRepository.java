@@ -1,6 +1,7 @@
 package com.pickfolio.contest.repository;
 
 import com.pickfolio.contest.domain.model.ContestParticipant;
+import com.pickfolio.contest.constant.ContestStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -21,6 +22,8 @@ public interface ContestParticipantRepository extends JpaRepository<ContestParti
     List<ContestParticipant> findAllWithHoldingsInLiveContests();
 
     List<ContestParticipant> findAllByUserId(UUID userId);
+    
+    List<ContestParticipant> findAllByUserIdAndContestStatus(UUID userId, ContestStatus status);
 
     List<ContestParticipant> findAllByContestIdOrderByTotalPortfolioValueDesc(UUID contestId);
 }
