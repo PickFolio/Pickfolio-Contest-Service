@@ -289,8 +289,8 @@ public class ContestServiceImpl implements ContestService {
 
         return participants.stream()
                 .map(p -> {
-                    String username = userDetailsMap.getOrDefault(p.getUserId(), new UserDetailResponse(p.getUserId(), "Unknown")).username();
-                    return new LeaderboardEntryResponse(p.getId(), p.getUserId(), username, p.getTotalPortfolioValue());
+                    UserDetailResponse userDetail = userDetailsMap.getOrDefault(p.getUserId(), new UserDetailResponse(p.getUserId(), "Unknown", false, null));
+                    return new LeaderboardEntryResponse(p.getId(), p.getUserId(), userDetail.username(), p.getTotalPortfolioValue(), userDetail.isBot(), userDetail.personaType());
                 })
                 .collect(Collectors.toList());
 
