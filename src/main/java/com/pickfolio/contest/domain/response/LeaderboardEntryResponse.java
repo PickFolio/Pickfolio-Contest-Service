@@ -7,5 +7,7 @@ public record LeaderboardEntryResponse(
         UUID participantId,
         UUID userId,
         String username,
-        BigDecimal totalPortfolioValue
+        BigDecimal totalPortfolioValue,
+        boolean isBot,
+        String personaType
 ) {}

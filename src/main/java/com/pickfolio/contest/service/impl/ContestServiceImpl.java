@@ -75,6 +75,32 @@ public class ContestServiceImpl implements ContestService {
         contestParticipantRepository.save(creatorAsParticipant);
         log.info("Creator {} automatically joined contest {}", creatorId, savedContest.getId());
 
+        // Auto-join bots if it's a public contest and max participants is 5 or more
+        if (!savedContest.isPrivate() && savedContest.getMaxParticipants() >= 5) {
+            try {
+                List<UserDetailResponse> bots = authServiceClient.getAllBots().block();
+                if (bots != null && !bots.isEmpty()) {
+                    // Calculate how many bots we can add without exceeding max participants (leaving room for creator)
+                    int availableSpots = savedContest.getMaxParticipants() - 1;
+                    int botsToAddCount = Math.min(bots.size(), availableSpots);
+                    
+                    for (int i = 0; i < botsToAddCount; i++) {
+                        UserDetailResponse bot = bots.get(i);
+                        ContestParticipant botParticipant = ContestParticipant.builder()
+                                .contest(savedContest)
+                                .userId(bot.id())
+                                .cashBalance(savedContest.getVirtualBudget())
+                                .totalPortfolioValue(savedContest.getVirtualBudget())
+                                .build();
+                        contestParticipantRepository.save(botParticipant);
+                        log.info("AI Bot {} automatically joined public contest {}", bot.username(), savedContest.getId());
+                    }
+                }
+            } catch (Exception e) {
+                log.error("Failed to auto-join bots to public contest: {}", e.getMessage());
+            }
+        }
+
         return converter.convert(savedContest);
     }
 
@@ -263,8 +289,8 @@ public class ContestServiceImpl implements ContestService {
 
         return participants.stream()
                 .map(p -> {
-                    String username = userDetailsMap.getOrDefault(p.getUserId(), new UserDetailResponse(p.getUserId(), "Unknown")).username();
-                    return new LeaderboardEntryResponse(p.getId(), p.getUserId(), username, p.getTotalPortfolioValue());
+                    UserDetailResponse userDetail = userDetailsMap.getOrDefault(p.getUserId(), new UserDetailResponse(p.getUserId(), "Unknown", false, null));
+                    return new LeaderboardEntryResponse(p.getId(), p.getUserId(), userDetail.username(), p.getTotalPortfolioValue(), userDetail.isBot(), userDetail.personaType());
                 })
                 .collect(Collectors.toList());
 

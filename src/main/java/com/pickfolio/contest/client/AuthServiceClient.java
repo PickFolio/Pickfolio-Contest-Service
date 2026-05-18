@@ -26,4 +26,12 @@ public class AuthServiceClient {
                 .bodyToFlux(UserDetailResponse.class)
                 .collectList();
     }
+
+    public Mono<List<UserDetailResponse>> getAllBots() {
+        return authServiceWebClient.get()
+                .uri("/api/internal/users/bots")
+                .retrieve()
+                .bodyToFlux(UserDetailResponse.class)
+                .collectList();
+    }
 }
