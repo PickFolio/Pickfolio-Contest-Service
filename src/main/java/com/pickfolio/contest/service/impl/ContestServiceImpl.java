@@ -206,6 +206,7 @@ public class ContestServiceImpl implements ContestService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<String> findActiveSymbols() {
         List<String> symbols = portfolioHoldingRepository.findDistinctStockSymbolsInLiveContests();
         log.debug("Found {} active symbols in live contests", symbols.size());
